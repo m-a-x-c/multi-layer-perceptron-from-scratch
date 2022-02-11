@@ -50,10 +50,15 @@ class MultiLayerPerceptron:
         for i in range(len(self.X)):
             self.feedforward(self.X[i], with_print=True)
         
-        print("Total number of updates: ", self.total_num_of_updates)
-        print("Total number of epochs: ", self.num_of_epochs)
-        print("Total time taken: ", elapsed)
+        print("Total number of updates:", self.total_num_of_updates)
+        print("Total number of epochs:", self.num_of_epochs)
+        print("Total time taken:", round(elapsed, 2), "seconds")
+        print("------------------------------------\n")
 
+        # print(self.nodes)
+        # print("\n")
+        # print(self.weights)
+        
 
 
 
@@ -95,9 +100,9 @@ class MultiLayerPerceptron:
             self.nodes[i+1] = self.activation_func(val)
         
         if with_print:
-            print("INPUT NODES: ", instance)
-            print("OUTPUT NODES: ", self.nodes[-1])
-            print(" ")
+            print("INPUT NODES:", instance)
+            print("OUTPUT NODES:", self.nodes[-1])
+            print("")
 
 
 
@@ -204,7 +209,8 @@ class MultiLayerPerceptron:
             # print('\n')
             # print(prev)
             
-
+        # print(self.nodes)
+        # print("\n")
         # print(self.weights)
         # print("\n")
         # print(self.derivatives)
@@ -246,8 +252,27 @@ if __name__ == "__main__":
         [0]
     ]
 
-    layer_config = [2, 4, 1]
-    learning_rate = 0.4
-    num_of_epochs = 10000
+    X = [
+        [1,1],
+        [0,1],
+        [1,0],
+        [0,0],
+    ]
 
+    y = [
+        [0],
+        [1],
+        [1],
+        [0]
+    ]
+
+    # layer_config = [2, 4, 4, 1]
+    # learning_rate = 0.3
+    # num_of_epochs = 20000
+    # MultiLayerPerceptron(X, y, layer_config, learning_rate, num_of_epochs)
+
+
+    layer_config = [2, 2, 1]
+    learning_rate = 0.15
+    num_of_epochs = 200000
     MultiLayerPerceptron(X, y, layer_config, learning_rate, num_of_epochs)
