@@ -35,6 +35,9 @@ class MultiLayerPerceptron:
             self.nodes_no_act.append(np.ones((num_of_nodes)))
         
 
+
+
+    def train(self):
         start = time.time()
 
         print("...TRAINING...\n")
@@ -58,9 +61,6 @@ class MultiLayerPerceptron:
         # print(self.nodes)
         # print("\n")
         # print(self.weights)
-        
-
-
 
     def sigmoid(self, x):
         return ( 1 / ( 1+np.exp(-1*x) ) )
@@ -245,13 +245,6 @@ if __name__ == "__main__":
         [0,0,0]
     ]
 
-    y = [
-        [0],
-        [1],
-        [1],
-        [0]
-    ]
-
     X = [
         [1,1],
         [0,1],
@@ -266,13 +259,9 @@ if __name__ == "__main__":
         [0]
     ]
 
-    # layer_config = [2, 4, 4, 1]
-    # learning_rate = 0.3
-    # num_of_epochs = 20000
-    # MultiLayerPerceptron(X, y, layer_config, learning_rate, num_of_epochs)
-
-
     layer_config = [2, 2, 1]
     learning_rate = 0.15
     num_of_epochs = 200000
-    MultiLayerPerceptron(X, y, layer_config, learning_rate, num_of_epochs)
+
+    mlp = MultiLayerPerceptron(X, y, layer_config, learning_rate, num_of_epochs)
+    mlp.train()
