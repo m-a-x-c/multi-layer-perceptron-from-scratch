@@ -20,6 +20,8 @@ class MultiLayerPerceptron:
         self.w_to_out = []
         self.w_target = []
 
+        self.total_num_of_updates = 0
+
         for i in range(self.num_of_layers - 1):
             n = self.layer_config[i]
             m = self.layer_config[i+1]
@@ -33,20 +35,25 @@ class MultiLayerPerceptron:
             self.nodes_no_act.append(np.ones((num_of_nodes)))
         
 
-        # start = time.time()
+        start = time.time()
 
+        print("...TRAINING...\n")
         for n in range(self.num_of_epochs):
             for i in range(len(self.X)):
                 self.feedforward(self.X[i])
                 self.calc_derivative(self.y[i])
                 self.update_weights()
+                self.total_num_of_updates += 1
 
-        # print(time.time() - start)
+        elapsed = time.time() - start
 
+        for i in range(len(self.X)):
+            self.feedforward(self.X[i], with_print=True)
+        
+        print("Total number of updates: ", self.total_num_of_updates)
+        print("Total number of epochs: ", self.num_of_epochs)
+        print("Total time taken: ", elapsed)
 
-        # self.feedforward(self.X[1])
-        # self.calc_derivative(self.y[1])
-        # self.update_weights()
 
 
 
@@ -79,7 +86,7 @@ class MultiLayerPerceptron:
 
 
 
-    def feedforward(self, instance):
+    def feedforward(self, instance, with_print=False):
         self.nodes_no_act[0] = np.array(instance)
         self.nodes[0] = np.array(instance)
         for i in range(self.num_of_layers - 1):
@@ -87,9 +94,10 @@ class MultiLayerPerceptron:
             self.nodes_no_act[i+1] = val
             self.nodes[i+1] = self.activation_func(val)
         
-
-        print(instance)
-        print(self.nodes[-1])
+        if with_print:
+            print("INPUT NODES: ", instance)
+            print("OUTPUT NODES: ", self.nodes[-1])
+            print(" ")
 
 
 
@@ -216,32 +224,30 @@ class MultiLayerPerceptron:
         
 
         
-        
+if __name__ == "__main__":
+    X = [
+        [0,0],
+        [0,1],
+        [1,0],
+        [1,1]
+    ]
 
+    y = [
+        [0,0,0],
+        [1,1,1],
+        [1,1,1],
+        [0,0,0]
+    ]
 
-X = [
-    [0,0],
-    [0,1],
-    [1,0],
-    [1,1]
-]
+    y = [
+        [0],
+        [1],
+        [1],
+        [0]
+    ]
 
-y = [
-    [0,0,0],
-    [1,1,1],
-    [1,1,1],
-    [0,0,0]
-]
+    layer_config = [2, 4, 1]
+    learning_rate = 0.4
+    num_of_epochs = 10000
 
-y = [
-    [0],
-    [1],
-    [1],
-    [0]
-]
-
-layer_config = [2, 4, 1]
-learning_rate = 0.4
-num_of_epochs = 10000
-
-MultiLayerPerceptron(X, y, layer_config, learning_rate, num_of_epochs)
+    MultiLayerPerceptron(X, y, layer_config, learning_rate, num_of_epochs)
