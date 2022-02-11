@@ -33,7 +33,7 @@ class MultiLayerPerceptron:
             self.nodes_no_act.append(np.ones((num_of_nodes)))
         
 
-        start = time.time()
+        # start = time.time()
 
         for n in range(self.num_of_epochs):
             for i in range(len(self.X)):
@@ -41,7 +41,12 @@ class MultiLayerPerceptron:
                 self.calc_derivative(self.y[i])
                 self.update_weights()
 
-        print(time.time() - start)
+        # print(time.time() - start)
+
+
+        # self.feedforward(self.X[1])
+        # self.calc_derivative(self.y[1])
+        # self.update_weights()
 
 
 
@@ -83,9 +88,8 @@ class MultiLayerPerceptron:
             self.nodes[i+1] = self.activation_func(val)
         
 
-
-        # print(instance)
-        # print(self.nodes[-1])
+        print(instance)
+        print(self.nodes[-1])
 
 
 
@@ -139,9 +143,11 @@ class MultiLayerPerceptron:
         self.w_to_out = self.create_weights_to_list(self.nodes, self.layer_config)
         self.w_target = self.create_weights_target_list(instance_y, self.layer_config)
 
+
         self.w_to_in_act_deriv = []
-        for layer in self.w_to_in:
-            self.w_to_in_act_deriv.append(self.activation_func_derivative(layer))
+        for layer in self.w_to_out:
+            self.w_to_in_act_deriv.append(np.multiply(np.subtract(1, layer), layer))
+
 
     def terminal_layer_derivative(self):
         dE_dOuty = self.error_derivative(self.w_target, self.w_to_out[-1])
@@ -158,11 +164,14 @@ class MultiLayerPerceptron:
     def non_terminal_layer_derivative(self, layer_index, prev):
         m = self.layer_config[layer_index]
         n = self.layer_config[layer_index+1]
-        dE_dOuty = np.repeat(prev, n).reshape(m, n)
+        # dE_dOuty = np.repeat(prev, n).reshape(m, n) # fix this - error here
+        dE_dOuty = np.tile( prev, (m, 1) )
 
+        
         dOuty_dIny = self.w_to_in_act_deriv[layer_index]
         dIny_dW = self.w_from_out[layer_index]
         derivative = self.hadamard_product([dE_dOuty, dOuty_dIny, dIny_dW])
+
 
         for_next_layer = self.hadamard_product([dE_dOuty, dOuty_dIny, self.weights[layer_index]])
         for_next_layer = np.sum(for_next_layer, axis=1)
@@ -190,13 +199,13 @@ class MultiLayerPerceptron:
 
         # print(self.weights)
         # print("\n")
-        print(self.derivatives)
+        # print(self.derivatives)
     
     def update_weights(self):
         # print(self.weights)
 
         for i in range(len(self.weights)):
-            self.weights[i] = self.weights[i] - (self.learning_rate * self.derivatives[i])
+            self.weights[i] = np.subtract(self.weights[i], (self.learning_rate * self.derivatives[i]))
         
         # print(self.weights)
 
@@ -231,8 +240,8 @@ y = [
     [0]
 ]
 
-layer_config = [2, 2, 1]
-learning_rate = 0.1
-num_of_epochs = 1000
+layer_config = [2, 4, 1]
+learning_rate = 0.4
+num_of_epochs = 10000
 
 MultiLayerPerceptron(X, y, layer_config, learning_rate, num_of_epochs)
