@@ -1,17 +1,18 @@
 import numpy as np
 import copy
 import time
+import MLMath
 
 class MultiLayerPerceptron:
-    def __init__(self, X, y, layer_config, learning_rate=0.05, num_of_epochs=1):
-        
-
-        self.X = X
-        self.y = y
-        self.layer_config = layer_config
-        self.num_of_layers = len(layer_config)
-        self.learning_rate = learning_rate
-        self.num_of_epochs = num_of_epochs
+    def __init__(self, data, metadata):
+        self.X = data["inputs"]
+        self.y = data["targets"]
+        self.layer_config = metadata["layer configuration"]
+        self.num_of_layers = len(metadata["layer configuration"])
+        self.learning_rate = metadata["learning rate"]
+        self.num_of_epochs = metadata["number of epochs"]
+        self.act_func = metadata["activation function"]
+        self.error_func = metadata["error function"]
 
         self.weights = []
         self.w_from_in = []
@@ -62,32 +63,26 @@ class MultiLayerPerceptron:
         # print("\n")
         # print(self.weights)
 
-    def sigmoid(self, x):
-        return ( 1 / ( 1+np.exp(-1*x) ) )
-    
-    def sigmoid_derivative(self, x):
-        return (self.sigmoid(x) * (1 - self.sigmoid(x)))
-    
-    def mse_derivative(self, y, y_pred):
-        # print("y, y_pred : ", np.subtract(y, y_pred))
-        return (-2 * np.subtract(y, y_pred))
     
     def activation_func(self, x):
-        return self.sigmoid(x)
+        if self.act_func == "sigmoid":
+            return MLMath.sigmoid(x)
+        else:
+            return MLMath.sigmoid(x)
     
     def activation_func_derivative(self, x):
-        return self.sigmoid_derivative(x)
+        return MLMath.sigmoid_derivative(x)
     
-    def error_derivative(self, y, y_pred):
-        return self.mse_derivative(y, y_pred)
-    
-    def hadamard_product(self, args):
-        product = args[0]
+    def error(self, y, y_pred):
+        if self.error_func == "mse":
+            return MLMath.mse(y, y_pred)
+        else:
+            return MLMath.mse(y, y_pred)
 
-        for i in range(1, len(args)):
-            product = np.multiply(product, args[i])
-        
-        return product
+    def error_derivative(self, y, y_pred):
+        return MLMath.mse_derivative(y, y_pred)
+    
+
 
 
 
@@ -148,6 +143,7 @@ class MultiLayerPerceptron:
         # w_target = w_target.astype('float16')
 
         return w_target
+    
 
     def update_weights_lists(self, instance_y):
         self.w_from_in = self.create_weights_from_list(self.nodes_no_act, self.layer_config)
@@ -167,9 +163,9 @@ class MultiLayerPerceptron:
         dOuty_dIny = self.w_to_in_act_deriv[-1]
         dIny_dW = self.w_from_out[-1]
 
-        derivative = self.hadamard_product([dE_dOuty, dOuty_dIny, dIny_dW])
+        derivative = MLMath.hadamard_product([dE_dOuty, dOuty_dIny, dIny_dW])
         
-        for_next_layer = self.hadamard_product([dE_dOuty, dOuty_dIny, self.weights[-1]])
+        for_next_layer = MLMath.hadamard_product([dE_dOuty, dOuty_dIny, self.weights[-1]])
         for_next_layer = np.sum(for_next_layer, axis=1)
 
         return derivative, for_next_layer
@@ -177,16 +173,15 @@ class MultiLayerPerceptron:
     def non_terminal_layer_derivative(self, layer_index, prev):
         m = self.layer_config[layer_index]
         n = self.layer_config[layer_index+1]
-        # dE_dOuty = np.repeat(prev, n).reshape(m, n) # fix this - error here
         dE_dOuty = np.tile( prev, (m, 1) )
 
         
         dOuty_dIny = self.w_to_in_act_deriv[layer_index]
         dIny_dW = self.w_from_out[layer_index]
-        derivative = self.hadamard_product([dE_dOuty, dOuty_dIny, dIny_dW])
+        derivative = MLMath.hadamard_product([dE_dOuty, dOuty_dIny, dIny_dW])
 
 
-        for_next_layer = self.hadamard_product([dE_dOuty, dOuty_dIny, self.weights[layer_index]])
+        for_next_layer = MLMath.hadamard_product([dE_dOuty, dOuty_dIny, self.weights[layer_index]])
         for_next_layer = np.sum(for_next_layer, axis=1)
 
         return derivative, for_next_layer
@@ -203,11 +198,6 @@ class MultiLayerPerceptron:
                 d, prev = self.non_terminal_layer_derivative(i, prev)
             
             self.derivatives.insert(0,d)
-
-
-            # print(d)
-            # print('\n')
-            # print(prev)
             
         # print(self.nodes)
         # print("\n")
@@ -216,12 +206,8 @@ class MultiLayerPerceptron:
         # print(self.derivatives)
     
     def update_weights(self):
-        # print(self.weights)
-
         for i in range(len(self.weights)):
             self.weights[i] = np.subtract(self.weights[i], (self.learning_rate * self.derivatives[i]))
-        
-        # print(self.weights)
 
         
 
@@ -231,20 +217,6 @@ class MultiLayerPerceptron:
 
         
 if __name__ == "__main__":
-    X = [
-        [0,0],
-        [0,1],
-        [1,0],
-        [1,1]
-    ]
-
-    y = [
-        [0,0,0],
-        [1,1,1],
-        [1,1,1],
-        [0,0,0]
-    ]
-
     X = [
         [1,1],
         [0,1],
@@ -259,9 +231,20 @@ if __name__ == "__main__":
         [0]
     ]
 
-    layer_config = [2, 2, 1]
-    learning_rate = 0.15
-    num_of_epochs = 200000
+    data = {
+        "inputs" : X,
+        "targets" : y
+    }
 
-    mlp = MultiLayerPerceptron(X, y, layer_config, learning_rate, num_of_epochs)
+    metadata = {
+        "layer configuration" : [2, 2, 1],
+        "learning rate" : 0.1,
+        "number of epochs" : 100000,
+        "batch size" : 1,
+        "activation function" : "sigmoid",
+        "optimizer" : "adam",
+        "error function" : "mse",
+    }
+
+    mlp = MultiLayerPerceptron(data, metadata)
     mlp.train()
